@@ -8,6 +8,7 @@ public class APIDoorCall : MonoBehaviour
 {
 
     private String doorState = " ";
+    private Boolean state = false;
 
     private Animator myDoor = null;
 
@@ -16,19 +17,14 @@ public class APIDoorCall : MonoBehaviour
     {
 
         myDoor = GetComponent<Animator>();
-        StartCoroutine(GetRequest("https://basic-api-lock.vercel.app/checkDoor"));
+        //StartCoroutine(GetRequest("https://basic-api-lock.vercel.app/checkDoor"));
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(Time.frameCount % 240 == 0){
         StartCoroutine(GetRequest("https://basic-api-lock.vercel.app/checkDoor")); 
-
-        if(doorState == "true"){
-           if(myDoor != null){
-            myDoor.Play("Base Layer.DoorAnim", 1, 0.0f);
-            Debug.Log("Entre");
-           }
         }
     }
 
@@ -36,6 +32,7 @@ public class APIDoorCall : MonoBehaviour
     {
         using(UnityWebRequest webRequest = UnityWebRequest.Get(uri))
         {
+            //yield return new WaitForSeconds(3);
             yield return webRequest.SendWebRequest();
 
             string[] pages = uri.Split('/');
@@ -51,10 +48,30 @@ public class APIDoorCall : MonoBehaviour
                      Debug.LogError(pages[page]+"HTTP Error: {0}" + webRequest.error);
                      break;
                 case UnityWebRequest.Result.Success:
-                    // Debug.Log(String.Format(webRequest.downloadHandler.text));
+                    Debug.Log(String.Format(webRequest.downloadHandler.text));
                     doorState = String.Format(webRequest.downloadHandler.text);
                     break;
             }
+            
+            if(!state){
+                if(doorState == "true"){
+                    if(myDoor != null){
+                        state = true;
+                        myDoor.Play("Base Layer.DoorAnim", 0, 0.0f);
+                        Debug.Log("Open");
+                    }
+                }
+            }else{{
+                
+                if(doorState == "false"){
+                    state = false;
+                    if(myDoor != null){
+                        myDoor.Play("Base Layer.DoorAnimClose", 0, 0.0f);
+                        Debug.Log("Close");
+                    }
+                }
+            }}
+            
         }
     }
 }
